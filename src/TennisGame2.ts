@@ -1,121 +1,141 @@
-import { TennisGame } from './TennisGame';
+import { TennisGame } from "./TennisGame";
 
+/**
+ * @class Player
+ * @description Player class for TennisGame2
+ * @param {string} name
+ * @param {number} score
+ */
+class Player {
+  private name: string;
+  private score: number;
+
+  constructor(name: string) {
+    this.name = name;
+    this.score = 0;
+  }
+
+  /**
+   * Add point to player score
+   */
+  addPoint(): void {
+    this.score += 1;
+  }
+
+  /**
+   * Return player score
+   * @returns {number}
+   */
+  getScore(): number {
+    return this.score;
+  }
+
+  /**
+   * Return player name
+   * @returns {string}
+   */
+  getName(): string {
+    return this.name;
+  }
+}
+
+/**
+ * @class TennisGame2
+ * @implements {TennisGame}
+ *
+ * @description
+ * It is a simple refactoring of the TennisGame class from the previous version.
+ */
 export class TennisGame2 implements TennisGame {
-  P1point: number = 0;
-  P2point: number = 0;
+  private player1: Player;
+  private player2: Player;
+  score_description: string[] = ["Love", "Fifteen", "Thirty", "Forty"];
 
-  P1res: string = '';
-  P2res: string = '';
-
-  private player1Name: string;
-  private player2Name: string;
-
+  /**
+   * @param player1Name Name of the first player
+   * @param player2Name Name of the second player
+   */
   constructor(player1Name: string, player2Name: string) {
-    this.player1Name = player1Name;
-    this.player2Name = player2Name;
+    this.player1 = new Player(player1Name);
+    this.player2 = new Player(player2Name);
   }
 
+  /**
+   * Returns the score of the game depending of the TennisGame rules.
+   */
   getScore(): string {
-    let score: string = '';
-    if (this.P1point === this.P2point && this.P1point < 4) {
-      if (this.P1point === 0)
-        score = 'Love';
-      if (this.P1point === 1)
-        score = 'Fifteen';
-      if (this.P1point === 2)
-        score = 'Thirty';
-      score += '-All';
-    }
-    if (this.P1point === this.P2point && this.P1point >= 3)
-      score = 'Deuce';
-
-    if (this.P1point > 0 && this.P2point === 0) {
-      if (this.P1point === 1)
-        this.P1res = 'Fifteen';
-      if (this.P1point === 2)
-        this.P1res = 'Thirty';
-      if (this.P1point === 3)
-        this.P1res = 'Forty';
-
-      this.P2res = 'Love';
-      score = this.P1res + '-' + this.P2res;
-    }
-    if (this.P2point > 0 && this.P1point === 0) {
-      if (this.P2point === 1)
-        this.P2res = 'Fifteen';
-      if (this.P2point === 2)
-        this.P2res = 'Thirty';
-      if (this.P2point === 3)
-        this.P2res = 'Forty';
-
-      this.P1res = 'Love';
-      score = this.P1res + '-' + this.P2res;
-    }
-
-    if (this.P1point > this.P2point && this.P1point < 4) {
-      if (this.P1point === 2)
-        this.P1res = 'Thirty';
-      if (this.P1point === 3)
-        this.P1res = 'Forty';
-      if (this.P2point === 1)
-        this.P2res = 'Fifteen';
-      if (this.P2point === 2)
-        this.P2res = 'Thirty';
-      score = this.P1res + '-' + this.P2res;
-    }
-    if (this.P2point > this.P1point && this.P2point < 4) {
-      if (this.P2point === 2)
-        this.P2res = 'Thirty';
-      if (this.P2point === 3)
-        this.P2res = 'Forty';
-      if (this.P1point === 1)
-        this.P1res = 'Fifteen';
-      if (this.P1point === 2)
-        this.P1res = 'Thirty';
-      score = this.P1res + '-' + this.P2res;
-    }
-
-    if (this.P1point > this.P2point && this.P2point >= 3) {
-      score = 'Advantage player1';
-    }
-
-    if (this.P2point > this.P1point && this.P1point >= 3) {
-      score = 'Advantage player2';
-    }
-
-    if (this.P1point >= 4 && this.P2point >= 0 && (this.P1point - this.P2point) >= 2) {
-      score = 'Win for player1';
-    }
-    if (this.P2point >= 4 && this.P1point >= 0 && (this.P2point - this.P1point) >= 2) {
-      score = 'Win for player2';
-    }
-    return score;
+    return this.normalScore() || this.deuce() || this.advantage() || this.win();
   }
 
-  SetP1Score(score: number): void {
-    for (let i = 0; i < score; i++) {
-      this.P1Score();
+  /**
+   * Returns the difference of the scores of the players.
+   */
+  scoreDifference(): number {
+    return this.player1.getScore() - this.player2.getScore();
+  }
+
+  /**
+   * Returns the score of the game if players have less than 4 points and are not in a "Deuce" state with 3 points each.
+   */
+  normalScore(): string {
+    const score1 = this.player1.getScore();
+    const score2 = this.player2.getScore();
+
+    // If players have less than 4 points it will use the score_description array to return the score.
+    if (score1 < 4 && score2 < 4 && !(score1 + score2 === 6)) {
+      return !this.scoreDifference()
+        ? this.score_description[score1] + "-All"
+        : this.score_description[score1] + "-" + this.score_description[score2];
     }
+    return "";
   }
 
-  SetP2Score(score: number): void {
-    for (let i = 0; i < score; i++) {
-      this.P2Score();
+  /**
+   *  Returns "Deuce" of the game if players have exactly the same number of points.
+   */
+  deuce(): string {
+    if (this.scoreDifference() === 0) {
+      return "Deuce";
     }
+    return "";
   }
 
-  P1Score(): void {
-    this.P1point++;
+  /**
+   * Returns the score of the game if any of players are in the advantage state.
+   */
+  advantage(): string {
+    if (this.scoreDifference() === 1) {
+      return "Advantage " + this.player1.getName();
+    }
+    if (this.scoreDifference() === -1) {
+      return "Advantage " + this.player2.getName();
+    }
+    return "";
   }
 
-  P2Score(): void {
-    this.P2point++;
+  /**
+   * Returns the winner when any of players have at least four points in total and at least two points more than the opponent.
+   */
+  win(): string {
+    if (this.scoreDifference() >= 2) {
+      return "Win for " + this.player1.getName();
+    }
+    if (this.scoreDifference() <= -2) {
+      return "Win for " + this.player2.getName();
+    }
+    return "";
   }
 
-  wonPoint(player: string): void {
-    if (player === 'player1')
-      this.P1Score();
-    else
-      this.P2Score();
+  /**
+   * Adds a point to the indicated player
+   *  @param playerName Name of the player who won the point
+   */
+
+  wonPoint(playerName: string): void {
+    if (playerName === "player1") {
+      this.player1.addPoint();
+    } else {
+      this.player2.addPoint();
+    }
   }
 }
